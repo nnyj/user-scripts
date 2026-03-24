@@ -1,0 +1,23 @@
+### OS ###
+Thumbs.db
+desktop.ini
+.DS_Store
+
+### Office lock files ###
+~$*
+
+### Dev artifacts ###
+.env*
+__pycache__/
+node_modules/
+*.log
+*.tmp
+
+### Environments ###
+.env
+
+### Nested git repos ###
+programming/python/
+
+### Binaries ###
+path/
