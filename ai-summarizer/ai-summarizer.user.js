@@ -142,7 +142,7 @@
     "ais-provider": "llamacpp",
     "ais-model": "",
     "ais-model-suffix": "",
-    "ais-max-tokens": 16e3,
+    "ais-max-tokens": 32e3,
     "ais-max-chars": 2e5,
     "ais-custom-url": "",
     "ais-api-key": "",
@@ -886,13 +886,14 @@ ${text}`).then(() => flashBtn(copyBtn, "Copied!", "Copy"));
       body.innerHTML = "";
       let statusEl = mk("div", { className: "ais-status" });
       statusEl.textContent = suffix ? `Thinking (${suffix.replace(/[()]/g, "")})` : "Processing", body.appendChild(statusEl);
-      let full = "", thinkBuf = "", inThinking = !1, baseUrl = await getBaseUrl(), headers = await getAuthHeaders(), system = await cfg("ais-system-prompt"), maxTokens = await cfgInt("ais-max-tokens"), maxChars = await cfgInt("ais-max-chars"), content = `[Instructions]: ${system}
+      let contentBuf = "", thinkBuf = "", seenContent = !1, baseUrl = await getBaseUrl(), headers = await getAuthHeaders(), system = await cfg("ais-system-prompt"), maxTokens = await cfgInt("ais-max-tokens"), maxChars = await cfgInt("ais-max-chars"), content = `[Instructions]: ${system}
 
 Page: ${document.title.slice(0, 500)}
 
 ${text.slice(0, maxChars)}`;
       lastInputChars = content.length;
-      let reqBody = JSON.stringify({
+      let compose = () => (thinkBuf ? `<think>${thinkBuf}</think>
+` : "") + contentBuf, reqBody = JSON.stringify({
         model,
         messages: [{ role: "user", content }],
         max_tokens: maxTokens,
@@ -900,15 +901,16 @@ ${text.slice(0, maxChars)}`;
       });
       activeReq = stream(baseUrl + "/chat/completions", headers, reqBody, {
         onDelta({ thinking, content: content2 }) {
-          thinking && (thinkBuf += thinking, inThinking = !0), content2 && (inThinking && (full += `<think>${thinkBuf}</think>
-`, thinkBuf = "", inThinking = !1), full += content2);
-          let display = inThinking ? `<think>${thinkBuf}</think>` : full;
+          thinking && (seenContent ? contentBuf += thinking : thinkBuf += thinking), content2 && (seenContent = !0, contentBuf += content2);
+          let display = compose();
           display && !activeRevealTimer && (activeRevealTimer = setTimeout(() => {
             activeRevealTimer = null, body.replaceChildren(renderResponse(display));
           }, 50));
         },
         onDone(usage) {
-          clearTimeout(activeRevealTimer), activeRevealTimer = null, activeReq = null, hasSummarized = !0, lastUsage = usage || null, regenBtn.style.display = "", inThinking && (full += `<think>${thinkBuf}</think>`, thinkBuf = "", inThinking = !1), full ? (cachedResponse = full, body.replaceChildren(renderResponse(full, !0))) : body.textContent = "Empty response.";
+          clearTimeout(activeRevealTimer), activeRevealTimer = null, activeReq = null, hasSummarized = !0, lastUsage = usage || null, regenBtn.style.display = "";
+          let full = compose();
+          full ? (cachedResponse = full, body.replaceChildren(renderResponse(full, !0))) : body.textContent = "Empty response.";
         },
         onError(msg) {
           clearTimeout(activeRevealTimer), activeRevealTimer = null, activeReq = null, hasSummarized = !0, regenBtn.style.display = "", body.textContent = msg || "Failed to reach API";

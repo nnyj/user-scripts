@@ -9,7 +9,7 @@ export const DEFAULTS = {
   'ais-provider':             'llamacpp',
   'ais-model':                '',
   'ais-model-suffix':         '',
-  'ais-max-tokens':           16000,
+  'ais-max-tokens':           32000,
   'ais-max-chars':            200000,
   'ais-custom-url':           '',
   'ais-api-key':              '',

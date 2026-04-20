@@ -291,7 +291,7 @@ export async function createUI(options = {}) {
     statusEl.textContent = suffix ? `Thinking (${suffix.replace(/[()]/g, '')})` : 'Processing';
     body.appendChild(statusEl);
 
-    let full = '', thinkBuf = '', inThinking = false;
+    let contentBuf = '', thinkBuf = '', seenContent = false;
 
     const baseUrl = await getBaseUrl();
     const headers = await getAuthHeaders();
@@ -302,6 +302,8 @@ export async function createUI(options = {}) {
     const content = `[Instructions]: ${system}\n\nPage: ${document.title.slice(0, 500)}\n\n${text.slice(0, maxChars)}`;
     lastInputChars = content.length;
 
+    const compose = () => (thinkBuf ? `<think>${thinkBuf}</think>\n` : '') + contentBuf;
+
     const reqBody = JSON.stringify({
       model,
       messages: [{ role: 'user', content }],
@@ -311,12 +313,12 @@ export async function createUI(options = {}) {
 
     activeReq = http.stream(baseUrl + '/chat/completions', headers, reqBody, {
       onDelta({ thinking, content }) {
-        if (thinking) { thinkBuf += thinking; inThinking = true; }
-        if (content) {
-          if (inThinking) { full += `<think>${thinkBuf}</think>\n`; thinkBuf = ''; inThinking = false; }
-          full += content;
+        if (thinking) {
+          if (seenContent) contentBuf += thinking;
+          else thinkBuf += thinking;
         }
-        const display = inThinking ? `<think>${thinkBuf}</think>` : full;
+        if (content) { seenContent = true; contentBuf += content; }
+        const display = compose();
         if (display && !activeRevealTimer) {
           activeRevealTimer = setTimeout(() => {
             activeRevealTimer = null;
@@ -331,7 +333,7 @@ export async function createUI(options = {}) {
         hasSummarized = true;
         lastUsage = usage || null;
         regenBtn.style.display = '';
-        if (inThinking) { full += `<think>${thinkBuf}</think>`; thinkBuf = ''; inThinking = false; }
+        const full = compose();
         if (full) {
           cachedResponse = full;
           body.replaceChildren(renderResponse(full, true));
