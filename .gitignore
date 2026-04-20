@@ -10,6 +10,7 @@ desktop.ini
 .env*
 __pycache__/
 node_modules/
+dist/
 *.log
 *.tmp
 

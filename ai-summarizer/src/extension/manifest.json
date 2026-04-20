@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "AI Page Summarizer",
+  "version": "2.0.0",
+  "description": "Summarize any page using a local LLM (LMStudio, llama.cpp, etc.)",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "Summarize this page"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["mermaid-bridge.js"],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["mermaid-vendor.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

@@ -1,5 +1,3 @@
-// background.js — service worker handling API streaming for content script
-
 chrome.runtime.onConnect.addListener(port => {
   if (port.name !== 'ais-stream') return;
 
@@ -24,13 +22,14 @@ chrome.runtime.onConnect.addListener(port => {
       if (!res.ok) {
         let detail;
         try { detail = await res.text(); } catch { detail = res.statusText; }
-        try { port.postMessage({ type: 'error', message: `${res.status} — ${detail}` }); } catch {}
+        try { port.postMessage({ type: 'error', message: `${res.status} \u2014 ${detail}` }); } catch {}
         return;
       }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
+      let usage = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -39,7 +38,6 @@ chrome.runtime.onConnect.addListener(port => {
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop();
-
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed.startsWith('data: ')) continue;
@@ -48,21 +46,19 @@ chrome.runtime.onConnect.addListener(port => {
 
           try {
             const parsed = JSON.parse(data);
-            let text = null;
-
-            if (msg.provider === 'anthropic') {
-              if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta')
-                text = parsed.delta.text;
-            } else {
-              text = parsed.choices?.[0]?.delta?.content;
+            if (parsed.usage) usage = parsed.usage;
+            const delta = parsed.choices?.[0]?.delta;
+            if (!delta) continue;
+            const thinking = delta.reasoning_content || delta.reasoning || '';
+            const content = delta.content || '';
+            if (thinking || content) {
+              try { port.postMessage({ type: 'delta', thinking, content }); } catch {}
             }
-
-            if (text) port.postMessage({ type: 'delta', text });
           } catch {}
         }
       }
 
-      try { port.postMessage({ type: 'done' }); } catch {}
+      try { port.postMessage({ type: 'done', usage }); } catch {}
     } catch (e) {
       if (e.name !== 'AbortError') {
         try { port.postMessage({ type: 'error', message: e.message }); } catch {}
@@ -71,12 +67,10 @@ chrome.runtime.onConnect.addListener(port => {
   });
 });
 
-// Extension icon click → tell content script to toggle panel
 chrome.action.onClicked.addListener(tab => {
   if (tab.id) chrome.tabs.sendMessage(tab.id, { action: 'toggle' }).catch(() => {});
 });
 
-// Non-streaming fetch (model name, etc.)
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.action !== 'fetch') return;
   fetch(msg.url, msg.options || {})
