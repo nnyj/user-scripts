@@ -725,8 +725,10 @@ ${close}`;
     return k && (h.Authorization = `Bearer ${k}`), h;
   }
   async function getFullModel(available) {
-    let m = await cfg("ais-model") || available?.[0] || "default";
-    if (await cfg("ais-provider") === "cliproxyapi") {
+    let p = await cfg("ais-provider"), explicit = await cfg("ais-model");
+    if (p === "lmstudio") return explicit || "";
+    let m = explicit || available?.[0] || "default";
+    if (p === "cliproxyapi") {
       let s = await cfg("ais-model-suffix");
       return s ? m + s : m;
     }

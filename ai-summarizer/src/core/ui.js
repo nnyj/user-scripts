@@ -35,8 +35,10 @@ async function getAuthHeaders() {
 }
 
 async function getFullModel(available) {
-  const m = (await cfg('ais-model')) || available?.[0] || 'default';
   const p = await cfg('ais-provider');
+  const explicit = await cfg('ais-model');
+  if (p === 'lmstudio') return explicit || '';
+  const m = explicit || available?.[0] || 'default';
   if (p === 'cliproxyapi') {
     const s = await cfg('ais-model-suffix');
     return s ? m + s : m;
