@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         AI Page Summarizer
-// @version      2.0.0
+// @version      2.0.1
 // @description  Summarize any page using a local LLM (LMStudio, etc.)
 // @namespace    https://github.com/nnyj/user-scripts
 // @homepageURL  https://github.com/nnyj/user-scripts
@@ -156,17 +156,7 @@
       "Extract key insights. Use emoji, bullet, tables for readability.",
       "Categories use emoji too.",
       "",
-      "Visual features (use when they aid comprehension):",
-      "- TL;DR: Start with `> **TL;DR:** one-sentence takeaway` blockquote at top.",
-      "- Sentiment bars: `[bar:N/M label]` where N=value, M=max. e.g. `[bar:8/10 Codex instruction following]`",
-      "- Mermaid diagrams: use ```mermaid fences. Good diagram types:",
-      "  - `mindmap` for topic clustering / concept maps",
-      "  - `flowchart` for decisions, processes, relationships",
-      "  - `sequenceDiagram` for interactions between systems/people",
-      "  - `pie` for sentiment/opinion distribution",
-      "  - `timeline` for chronological content",
-      "  Always include 1-2 diagram types that best fit content.",
-      "",
+      "TL;DR: Start with `> **TL;DR:** one-sentence takeaway` blockquote at top.",
       "Tally repeats/sentiments: \u{1F525} after points (\u{1F525}=3-4, \u{1F525}\u{1F525}=5-7, \u{1F525}\u{1F525}\u{1F525}=8+).",
       "Style:",
       "- Drop articles, filler, pleasantries, hedging",
