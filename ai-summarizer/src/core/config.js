@@ -1,3 +1,5 @@
+import systemPrompt from './system_prompt.txt';
+
 export const PROVIDERS = {
   llamacpp:    { label: 'llama.cpp',   url: 'http://localhost:8080/v1' },
   lmstudio:    { label: 'LMStudio',   url: 'http://localhost:1234/v1' },
@@ -18,30 +20,7 @@ export const DEFAULTS = {
   'ais-site-configs':         {},
   'ais-auto-summarize-sites': {},
   'ais-hidden-domains':       {},
-  'ais-system-prompt': [
-    'You are a subagent. Summarize this content for Opus to use in a coding task.',
-    'Extract key insights. Use emoji, bullet, tables for readability.',
-    'Categories use emoji too.',
-    '',
-    'Visual features (use when they aid comprehension):',
-    '- TL;DR: Start with `> **TL;DR:** one-sentence takeaway` blockquote at top.',
-    '- Sentiment bars: `[bar:N/M label]` where N=value, M=max. e.g. `[bar:8/10 Codex instruction following]`',
-    '- Mermaid diagrams: use ```mermaid fences. Good diagram types:',
-    '  - `mindmap` for topic clustering / concept maps',
-    '  - `flowchart` for decisions, processes, relationships',
-    '  - `sequenceDiagram` for interactions between systems/people',
-    '  - `pie` for sentiment/opinion distribution',
-    '  - `timeline` for chronological content',
-    '  Always include 1-2 diagram types that best fit content.',
-    '',
-    'Tally repeats/sentiments: \u{1F525} after points (\u{1F525}=3-4, \u{1F525}\u{1F525}=5-7, \u{1F525}\u{1F525}\u{1F525}=8+).',
-    'Style:',
-    '- Drop articles, filler, pleasantries, hedging',
-    '- Fragments fine. Short synonyms. Technical terms stay exact.',
-    '- Pattern: [thing] [action] [reason].',
-    '- ## headings + --- separators for grouped content.',
-    '- Use collapsible sections: `<details><summary>Section title</summary>content</details>` for secondary detail.',
-  ].join('\n'),
+  'ais-system-prompt':        systemPrompt.trim(),
 };
 
 export const SITE_CONFIGS = {
@@ -58,4 +37,3 @@ const NO_THINKING = /haiku|gpt-3|gpt-4o-mini/i;
 export function modelSupportsThinking(name) {
   return name && !NO_THINKING.test(name);
 }
-

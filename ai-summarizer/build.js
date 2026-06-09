@@ -11,7 +11,7 @@ const RAW_BASE = 'https://raw.githubusercontent.com/nnyj/user-scripts/main/ai-su
 
 const USERSCRIPT_HEADER = `// ==UserScript==
 // @name         AI Page Summarizer
-// @version      2.0.0
+// @version      2.0.2
 // @description  Summarize any page using a local LLM (LMStudio, etc.)
 // @namespace    https://github.com/nnyj/user-scripts
 // @homepageURL  https://github.com/nnyj/user-scripts
@@ -37,6 +37,7 @@ async function build() {
     target: 'es2020',
     minifySyntax: true,
     sourcemap: false,
+    loader: { '.txt': 'text' },
   };
 
   if (buildUserscript) {

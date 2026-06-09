@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         AI Page Summarizer
-// @version      2.0.1
+// @version      2.0.2
 // @description  Summarize any page using a local LLM (LMStudio, etc.)
 // @namespace    https://github.com/nnyj/user-scripts
 // @homepageURL  https://github.com/nnyj/user-scripts
@@ -132,6 +132,23 @@
     });
   }
 
+  // src/core/system_prompt.txt
+  var system_prompt_default = `You are a subagent. Summarize this content for Opus to use in a coding task.
+
+Keep unique/key insights, disagreement/nuance.
+Merge repeated claims into one point. No recap/duplicates/regurgitate.
+End lines with tally of repeats/sentiments (\u{1F525}=3-4, \u{1F525}\u{1F525}=5-7, \u{1F525}\u{1F525}\u{1F525}=8+).
+
+Style:
+Be concise like smart caveman.
+Drop articles, filler, pleasantries, hedging.
+Fragments fine. Short synonyms. Keep exact technical terms.
+
+Format:
+Use ## and --- for grouping.
+Use bullets by default. Use tables only for real comparisons.
+`;
+
   // src/core/config.js
   var PROVIDERS = {
     llamacpp: { label: "llama.cpp", url: "http://localhost:8080/v1" },
@@ -151,21 +168,7 @@
     "ais-site-configs": {},
     "ais-auto-summarize-sites": {},
     "ais-hidden-domains": {},
-    "ais-system-prompt": [
-      "You are a subagent. Summarize this content for Opus to use in a coding task.",
-      "Extract key insights. Use emoji, bullet, tables for readability.",
-      "Categories use emoji too.",
-      "",
-      "TL;DR: Start with `> **TL;DR:** one-sentence takeaway` blockquote at top.",
-      "Tally repeats/sentiments: \u{1F525} after points (\u{1F525}=3-4, \u{1F525}\u{1F525}=5-7, \u{1F525}\u{1F525}\u{1F525}=8+).",
-      "Style:",
-      "- Drop articles, filler, pleasantries, hedging",
-      "- Fragments fine. Short synonyms. Technical terms stay exact.",
-      "- Pattern: [thing] [action] [reason].",
-      "- ## headings + --- separators for grouped content.",
-      "- Use collapsible sections: `<details><summary>Section title</summary>content</details>` for secondary detail."
-    ].join(`
-`)
+    "ais-system-prompt": system_prompt_default.trim()
   }, SITE_CONFIGS = {
     "old.reddit.com": { post: ".thing.link .usertext-body .md", comments: ".comment .usertext-body .md" },
     "news.ycombinator.com": { post: "", comments: ".commtext" },
