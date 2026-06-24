@@ -1,21 +1,23 @@
 // ==UserScript==
 // @name        Outlook Junk Auto-Delete
-// @namespace   Violentmonkey Scripts
+// @description Auto-deletes junk emails from known spam senders
+// @version     6.1
+// @homepageURL https://github.com/nnyj/user-scripts/tree/main/outlook-junk-autodelete
+// @updateURL   https://raw.githubusercontent.com/nnyj/user-scripts/main/outlook-junk-autodelete/outlook-junk-autodelete.user.js
+// @icon        https://outlook.live.com/favicon.ico
 // @match       https://outlook.live.com/mail/*
 // @grant       unsafeWindow
-// @icon        https://outlook.live.com/favicon.ico
-// @version     6.1
 // @run-at      document-start
 // ==/UserScript==
 
-// Auth format: MSAuth1.0 usertoken="<token>", type="MSACT"
-// Token source: MSAL cache in localStorage (scope: outlook.office.com)
+// Auth: MSAuth1.0 usertoken from MSAL cache in localStorage
 // CSRF: X-OWA-CANARY cookie
 
 (function() {
   'use strict';
+  if (window.top !== window.self) return;
 
-  // --- config ---
+  const TAG = '[junk-autodelete]';
   const INTERVAL_FG = 60 * 1000;
   const INTERVAL_BG = 300 * 1000;
   const MAX_ITEMS   = 50;
@@ -33,7 +35,6 @@
   const isMatch = name =>
     SENDERS.some(s => (name || '').toLowerCase().includes(s));
 
-  // --- read MSAL token from localStorage ---
   function getToken() {
     const ls = unsafeWindow.localStorage;
     for (let i = 0; i < ls.length; i++) {
@@ -52,37 +53,32 @@
     return m?.[1] || null;
   }
 
-  // --- OWA service.svc ---
   async function owaPost(action, body) {
     const token = getToken();
-    if (!token) { console.log('[junk-autodelete] no token'); return null; }
+    if (!token) { console.log(TAG, 'no token'); return null; }
     const canary = getCanary();
-    if (!canary) { console.log('[junk-autodelete] no canary'); return null; }
+    if (!canary) { console.log(TAG, 'no canary'); return null; }
 
     const n = Math.floor(Math.random() * 100);
     const url = `https://outlook.live.com/owa/0/service.svc?action=${action}&app=Mail&n=${n}`;
-    const reqHeaders = {
-      'authorization': `MSAuth1.0 usertoken="${token}", type="MSACT"`,
-      'action': action,
-      'content-type': 'application/json; charset=utf-8',
-      'x-owa-canary': canary,
-      'x-owa-urlpostdata': encodeURIComponent(JSON.stringify(body)),
-      'x-req-source': 'Mail',
-    };
-
     const res = await fetch(url, {
       method: 'POST',
       credentials: 'include',
-      headers: reqHeaders,
+      headers: {
+        'authorization': `MSAuth1.0 usertoken="${token}", type="MSACT"`,
+        'action': action,
+        'content-type': 'application/json; charset=utf-8',
+        'x-owa-canary': canary,
+        'x-owa-urlpostdata': encodeURIComponent(JSON.stringify(body)),
+        'x-req-source': 'Mail',
+      },
     });
 
-    const json = res.ok ? await res.json() : null;
-
     if (!res.ok) {
-      console.error(`[junk-autodelete] ${action}: ${res.status}`);
+      console.error(TAG, `${action}: ${res.status}`);
       return null;
     }
-    return json;
+    return res.json();
   }
 
   const header = {
@@ -129,12 +125,16 @@
     });
   }
 
+  let running = false;
   async function runCleanup() {
+    if (running) return;
+    running = true;
     const ts = new Date().toLocaleTimeString();
     try {
       const res = await findJunk();
       if (!res) return;
 
+      // OWA wraps results in ResponseMessages > Items[] > RootFolder > Items[]
       const msgs = res?.Body?.ResponseMessages?.Items ?? [];
       const toDelete = [];
       const senderLog = [];
@@ -142,35 +142,40 @@
       for (const msg of msgs) {
         for (const item of (msg?.RootFolder?.Items ?? [])) {
           const name = item?.From?.Mailbox?.Name ?? item?.Sender?.Mailbox?.Name ?? '';
-          if (isMatch(name)) {
-            toDelete.push(item.ItemId.Id);
+          const id = item?.ItemId?.Id;
+          if (id && isMatch(name)) {
+            toDelete.push(id);
             senderLog.push(name);
           }
         }
       }
 
       const total = msgs.reduce((n, m) => n + (m?.RootFolder?.TotalItemsInView ?? 0), 0);
-      console.log(`[junk-autodelete] ${ts} | junk: ${total} | matched: ${toDelete.length}`, senderLog);
+      console.log(TAG, `${ts} | junk: ${total} | matched: ${toDelete.length}`, senderLog);
 
       if (!toDelete.length) return;
       const del = await deleteItems(toDelete);
-      const ok = del?.Body?.ResponseMessages?.Items?.every(i => i.ResponseClass === 'Success');
-      console.log(`[junk-autodelete] ${ts} | deleted ${toDelete.length}: ${ok ? 'ok' : 'FAIL'}`);
+      if (!del) { console.log(TAG, `${ts} | delete request failed`); return; }
+      const ok = del.Body?.ResponseMessages?.Items?.every(i => i.ResponseClass === 'Success');
+      console.log(TAG, `${ts} | deleted ${toDelete.length}: ${ok ? 'ok' : 'FAIL'}`);
     } catch(e) {
-      console.error(`[junk-autodelete] ${ts} |`, e);
+      console.error(TAG, `${ts} |`, e);
+    } finally {
+      running = false;
     }
   }
 
+  // Polls faster when tab is focused, slower when backgrounded
   function startInterval() {
     const ms = document.hidden ? INTERVAL_BG : INTERVAL_FG;
     return setInterval(runCleanup, ms);
   }
 
+  let timer = null;
   setTimeout(() => {
     runCleanup();
     timer = startInterval();
   }, 5000);
-  let timer = null;
 
   document.addEventListener('visibilitychange', () => {
     clearInterval(timer);
