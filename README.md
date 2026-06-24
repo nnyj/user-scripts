@@ -36,6 +36,14 @@ Adds a total unread count to the Outlook Web tab title, e.g. `(5) Mail`.
 
 [Full documentation](outlook-unread-count/README.md)
 
+---
+
+### [Rclone Dashboard](rclone-dashboard/)
+
+Replaces the default rclone web GUI with a compact, information-dense dashboard. Grouped job stats, per-file progress bars, expandable error logs, focus mode.
+
+[Full documentation](rclone-dashboard/README.md)
+
 ## Install
 
 1. Install [Violentmonkey](https://violentmonkey.github.io/) (recommended) or Tampermonkey
