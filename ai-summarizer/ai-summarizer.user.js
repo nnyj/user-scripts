@@ -258,7 +258,7 @@ Use bullets by default. Use tables only for real comparisons.
     backdrop-filter: blur(12px);
     border-radius: 10px 0 0 10px;
     border-left: 3px solid rgba(255, 69, 0, 0.5);
-    transform: translateX(calc(100% - 14px));
+    transform: translateX(calc(100% - 20px));
     transition: transform .3s cubic-bezier(.4,0,.2,1);
   }
   #ais-btns:hover { transform: translateX(0); }
