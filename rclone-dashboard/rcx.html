@@ -90,7 +90,7 @@
   .rcx-wide-groups .rcx-files { display: block; column-width: 400px; column-gap: 8px; }
   .rcx-wide-groups .rcx-file { break-inside: avoid; }
 
-  .rcx-groups { column-width: 440px; column-gap: 8px; }
+  .rcx-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 8px; align-items: start; }
   .rcx-group {
     background: var(--rcx-bg2); border: 1px solid var(--rcx-border);
     border-radius: 4px; overflow: hidden; display: flex; flex-direction: column;
@@ -171,6 +171,13 @@ const groupNodes = new Map();
 let root, overallBarFill, overallBarText, overallRow, wideGroupsEl, groupsEl, idleEl;
 let statusEl;
 let consecutiveErrors = 0;
+let selecting = false;
+let pollTimer = null;
+
+document.addEventListener('mousedown', () => { selecting = true; });
+document.addEventListener('mouseup', () => {
+  setTimeout(() => { selecting = false; }, 200);
+});
 
 function fmtB(b) {
   if (!b || b < 0) return '0 B';
@@ -436,11 +443,9 @@ async function update() {
     const statsMap = new Map(stats);
     groupList.sort((a, b) => {
       const sa = statsMap.get(a), sb = statsMap.get(b);
-      const ea = Math.round((sa?.elapsedTime || 0) / 30) * 30;
-      const eb = Math.round((sb?.elapsedTime || 0) / 30) * 30;
-      if (ea !== eb) return eb - ea;
-      const activeA = sa?.transferring?.length || 0, activeB = sb?.transferring?.length || 0;
-      if (activeA !== activeB) return activeB - activeA;
+      const startA = sa?.elapsedTime ? Math.round((Date.now()/1000 - sa.elapsedTime) / 60) : 0;
+      const startB = sb?.elapsedTime ? Math.round((Date.now()/1000 - sb.elapsedTime) / 60) : 0;
+      if (startA !== startB) return startB - startA;
       return a.localeCompare(b);
     });
 
@@ -471,9 +476,15 @@ async function update() {
   }
 }
 
+function schedulePoll() {
+  pollTimer = setTimeout(async () => {
+    if (!selecting) await update();
+    schedulePoll();
+  }, POLL_MS);
+}
+
 init();
-setInterval(update, POLL_MS);
-setTimeout(update, 300);
+setTimeout(() => { update().then(schedulePoll); }, 300);
 </script>
 </body>
 </html>
