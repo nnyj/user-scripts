@@ -1,54 +1,27 @@
 # user-scripts
 
-A collection of userscripts for [Violentmonkey](https://violentmonkey.github.io/) / [Tampermonkey](https://www.tampermonkey.net/).
+<div align="center">
 
-[![License](https://img.shields.io/github/license/nnyj/user-scripts?style=for-the-badge)](https://github.com/nnyj/user-scripts/blob/main/LICENSE)
+[![Stars](https://img.shields.io/github/stars/nnyj/user-scripts?style=for-the-badge&labelColor=555&color=e3b341)](https://github.com/nnyj/user-scripts/stargazers)
+
+</div>
+
+Userscripts for [Violentmonkey](https://violentmonkey.github.io/) and Tampermonkey, plus a standalone rclone dashboard.
 
 ## Scripts
 
-### [AI Page Summarizer](ai-summarizer/)
-
-Reads the page so you don't have to. One click sends it to a local LLM and streams back bullet points, mermaid diagrams, sentiment bars, tables. Works on Reddit, HN, Stack Overflow, Discourse, blogs, docs, anything.
-
-![summary output](docs/assets/summary-output.png)
-
-- Streaming markdown with live rendering
-- Mermaid diagrams: mindmaps, flowcharts, sequence, pie, timeline
-- Visual element picker for custom site configs
-- Auto-summarize per domain
-- Works as userscript or browser extension (Chrome/Firefox)
-
-[Full documentation](ai-summarizer/README.md)
-
----
-
-### [Outlook Junk Auto-Delete](outlook-junk-autodelete/)
-
-Auto-deletes junk emails from known spam senders in Outlook Web. Polls the Junk folder via OWA's internal API, matches against a configurable blocklist, soft-deletes matches. Zero setup beyond editing the sender list.
-
-[Full documentation](outlook-junk-autodelete/README.md)
-
----
-
-### [Outlook Unread Count](outlook-unread-count/)
-
-Adds a total unread count to the Outlook Web tab title, e.g. `(5) Mail`.
-
-[Full documentation](outlook-unread-count/README.md)
-
----
-
-### [Rclone Dashboard](rclone-dashboard/)
-
-Replaces the default rclone web GUI with a compact, information-dense dashboard. Grouped job stats, per-file progress bars, expandable error logs, focus mode.
-
-[Full documentation](rclone-dashboard/README.md)
+- [ai-summarizer](ai-summarizer/): sends any page to a local LLM (LM Studio, etc.) and streams back bullet-point summaries, mermaid diagrams, sentiment bars, and tables. Visual element picker for site-specific configs, auto-summarize per domain. Distributable as userscript or browser extension (Chrome/Firefox). Matches `*://*/*`
+- [outlook-junk-autodelete](outlook-junk-autodelete/): polls the Junk folder via OWA's internal API and soft-deletes emails from a configurable sender blocklist. No setup beyond editing the sender list. Matches `outlook.live.com`
+- [outlook-unread-count](outlook-unread-count/): prepends total unread count to the Outlook tab title, e.g. `(5) Mail`. Matches `outlook.live.com`, `outlook.office.com`, `outlook.office365.com`
+- [rclone-dashboard](rclone-dashboard/): standalone HTML dashboard (`rcx.html`) that replaces the default rclone web GUI with grouped job stats, per-file progress bars, expandable error logs, and focus mode. `rcx-inject.js` adds a "Dashboard" link to the rclone sidebar
 
 ## Install
 
-1. Install [Violentmonkey](https://violentmonkey.github.io/) (recommended) or Tampermonkey
-2. Click any `.user.js` file in this repo, the extension will prompt to install
-3. Or open the raw file URL directly
+1. Install [Violentmonkey](https://violentmonkey.github.io/) or Tampermonkey
+2. Click any `.user.js` file in this repo — the extension will prompt to install
+3. Or open the raw file URL directly in the browser
+
+For rclone-dashboard, drop `rcx.html` and `rcx-inject.js` into the rclone web GUI static files directory.
 
 ## License
 
