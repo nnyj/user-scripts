@@ -14,6 +14,9 @@ Userscripts for [Violentmonkey](https://violentmonkey.github.io/) and Tampermonk
 - [outlook-junk-autodelete](outlook-junk-autodelete/): polls the Junk folder via OWA's internal API and soft-deletes emails from a configurable sender blocklist. No setup beyond editing the sender list. Matches `outlook.live.com`
 - [outlook-unread-count](outlook-unread-count/): prepends total unread count to the Outlook tab title, e.g. `(5) Mail`. Matches `outlook.live.com`, `outlook.office.com`, `outlook.office365.com`
 - [rclone-dashboard](rclone-dashboard/): standalone HTML dashboard (`rcx.html`) that replaces the default rclone web GUI with grouped job stats, per-file progress bars, expandable error logs, and focus mode. `rcx-inject.js` adds a "Dashboard" link to the rclone sidebar
+- [youtube-multiselect](youtube-multiselect/): picks several videos on a playlist page, then copies, moves or removes them in one go. Matches `www.youtube.com`
+
+New scripts start from [template](template/template.user.js): shared light/dark theme tokens and button styles.
 
 ## Install
 

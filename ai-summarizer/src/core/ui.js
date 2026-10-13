@@ -100,7 +100,7 @@ export async function createUI(options = {}) {
   const settingsDiv = mk('div', { id: 'ais-settings' });
   settingsDiv.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span>Site: <b id="ais-cfg-host" style="color:#d7dadc"></b> <span id="ais-cfg-source"></span></span>
+      <span>Site: <b id="ais-cfg-host" style="color:var(--ui-fg)"></b> <span id="ais-cfg-source"></span></span>
     </div>
     <div class="ais-cfg-row">
       <label>Post</label>
@@ -156,14 +156,14 @@ export async function createUI(options = {}) {
       <input type="text" id="ais-cfg-tokens" style="width:70px;flex:none">
       <label style="width:auto;margin-left:8px" title="Max input chars">Chars</label>
       <input type="text" id="ais-cfg-chars" style="width:70px;flex:none">
-      <span id="ais-cfg-usage" style="color:#616384;font-size:10px;margin-left:4px;white-space:nowrap"></span>
+      <span id="ais-cfg-usage" style="color:var(--ui-dim);font-size:10px;margin-left:4px;white-space:nowrap"></span>
       <button class="ais-cfg-field-reset" data-reset="tokens" title="Reset tokens/chars">\u21ba</button>
     </div>
     <div class="ais-cfg-btns">
       <div style="display:flex;gap:4px"><button id="ais-cfg-import">Import</button><button id="ais-cfg-export">Export</button></div>
       <div style="display:flex;gap:4px"><button id="ais-cfg-reset">Reset</button><button id="ais-cfg-save">Save</button></div>
     </div>
-    <div id="ais-hidden-section" style="margin-top:8px;border-top:1px solid #333;padding-top:6px">
+    <div id="ais-hidden-section" style="margin-top:8px;border-top:1px solid var(--ui-border);padding-top:6px">
       <details id="ais-hidden-details">
         <summary>Hidden domains</summary>
         <div id="ais-hidden-list" style="margin-top:4px"></div>
@@ -393,7 +393,7 @@ export async function createUI(options = {}) {
     const hidden = await getHiddenDomains();
     const domains = Object.keys(hidden);
     if (!domains.length) {
-      list.innerHTML = '<span style="color:#555;font-size:10px">None</span>';
+      list.innerHTML = '<span style="color:var(--ui-dim);font-size:10px">None</span>';
       return;
     }
     list.innerHTML = '';
