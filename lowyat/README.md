@@ -16,6 +16,7 @@ Violentmonkey userscript that makes Lowyat forum topic pages dense and dark, in 
 - Zooms the whole forum to 115%, `PAGE_ZOOM` at the top of the script sets the level
 - Topic lists hide locked topics, `Show N locked` in the list title bar brings them back
 - Like, Quote and Reply buttons stay dim until hover
+- Works on the mobile site, without zoom, dim buttons or the locked topic toggle
 
 ## Install
 
@@ -28,7 +29,7 @@ Open `lowyat.user.js` in a browser with Violentmonkey, then confirm install.
 
 ## Privacy
 
-The script sends no requests, it only changes the page.
+The script only requests Lowyat topic pages, when you press a Load page button.
 
 ## License
 

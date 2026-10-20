@@ -29,10 +29,10 @@
     html.lyc .post_table.lyc-op { border-left: 3px solid var(--lyc-op); }
     html.lyc .post_table:target { border-color: var(--lyc-target); }
     html.lyc .post_table > tbody > tr > td { padding: 2px 6px; border: 0 !important; background: transparent !important; }
-    html.lyc .post_table > tbody > tr:first-child > td.post_td_right { background: var(--lyc-head) !important;
+    html.lyc .post_table > tbody > tr:first-child > td.lyc-head-cell { background: var(--lyc-head) !important;
       border-bottom: 1px solid var(--lyc-head-border) !important; }
     html.lyc .post_table .post_td_left, html.lyc .post_table .catend,
-    html.lyc .post_table tr:first-child > .post_td_right > :not(.lyc-head),
+    html.lyc .post_table tr:first-child > .lyc-head-cell > :not(.lyc-head),
     html.lyc .post_table .formbuttonrow > div[style*="float"],
     html.lyc .post_table img[name^="mad_"],
     html.lyc .post_table .reactionsBar, html.lyc .post_table .signature { display: none !important; }
@@ -53,7 +53,8 @@
     html.lyc .post_text .quotetop.lyc-chip { display: block; margin: 0 0 2px; padding: 1px 6px; border: 0; border-left: 3px solid var(--lyc-quote-bar);
       border-radius: 3px; background: var(--lyc-quote) !important; color: #9a9a9a; font: 12px/18px system-ui, sans-serif;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-    html.lyc .post_text .lyc-chip.lyc-short { cursor: default; }
+    /* Short quotes don't expand, so they wrap instead of losing their end on narrow screens. */
+    html.lyc .post_text .lyc-chip.lyc-short { cursor: default; white-space: normal; }
     html.lyc .post_text .lyc-chip:not(.lyc-short):hover { background: #2a3440 !important; }
     html.lyc .post_text .lyc-chip .lyc-caret { display: inline-block; width: 14px; color: var(--lyc-quote-bar); }
     html.lyc .post_text .lyc-chip:not(.lyc-short) .lyc-caret { font-size: 10px; }
@@ -82,6 +83,11 @@
 
     html.lyc .post_table > tbody > tr > td.formbuttonrow { height: auto; padding: 0 6px 2px !important; line-height: 16px; opacity: .35; transition: opacity .15s; }
     html.lyc .post_table:hover .formbuttonrow { opacity: 1; }
+    /* Touch screens have no hover and the mobile site already fits the screen. */
+    @media (hover: none) {
+      html.lyc body { zoom: 1; }
+      html.lyc .post_table > tbody > tr > td.formbuttonrow { opacity: 1; }
+    }
     html.lyc .post_table .formbuttonrow :is(.btnsubblue, .btnhide) { padding: 0 4px; border: 0; background: none;
       color: var(--lyc-dim); font: 600 12px system-ui, sans-serif; }
     html.lyc .post_table :is(a.btn-quoteoff, a.btn-quoteon) { background: none; }
@@ -214,7 +220,12 @@
   function build_head(post) {
     const [head_row, body_row] = post.rows;
     const left = head_row.cells[0];
-    const date_text = head_row.cells[1].querySelector('.postdetails')?.textContent.trim() ?? '';
+    // The mobile site puts author, date and post number in one header cell.
+    const right = head_row.cells[1] ?? left;
+    right.classList.add('lyc-head-cell');
+    // Mobile date text ends with `Post #N`.
+    const details = right.querySelector('.postdetails')?.textContent ?? '';
+    const date_text = details.replace(/\s+/g, ' ').replace(/ Post #\d+\s*$/, '').trim();
     const date = parse_date(date_text);
     const author = left.querySelector('.normalname');
     // Rank, post count and join date sit in text nodes between <br> tags.
@@ -227,8 +238,8 @@
       el('span', { textContent: date ? time_ago(date) : date_text, title: date_text }),
       el('span', { className: 'lyc-likes' }),
       el('span', { className: 'lyc-replies' }),
-      el('span', { className: 'lyc-num' }, head_row.cells[1].querySelector('a[onclick^="link_to_post"]') ?? ''));
-    head_row.cells[1].append(head);
+      el('span', { className: 'lyc-num' }, right.querySelector('a[onclick^="link_to_post"]') ?? ''));
+    right.append(head);
   }
 
   const POST = 'table[id^="post_"]';
@@ -261,7 +272,7 @@
         replies.get(parent).push({ pid, author });
       }
       update_likes(post);
-      new MutationObserver(() => update_likes(post)).observe(post.rows[1].cells[1], { childList: true, subtree: true });
+      new MutationObserver(() => update_likes(post)).observe(post.querySelector('.post_text').parentElement, { childList: true, subtree: true });
     }
   }
 
@@ -336,7 +347,8 @@
   function add_pager(posts) {
     const match = location.pathname.match(/^\/topic\/(\d+)(?:\/\+(\d+))?/);
     if (!match) return;
-    const pagination = document.querySelector('.pgn-pop');
+    // Desktop pages use `.pgn-pop`, mobile pages use `.pgn-data`.
+    const pagination = document.querySelector('.pgn-pop, .pgn-data');
     pager.topic = match[1];
     pager.size = +(pagination?.dataset.pp ?? 20);
     pager.pages = +(pagination?.dataset.pages ?? 1);
