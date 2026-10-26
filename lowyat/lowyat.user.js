@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        Lowyat
 // @namespace   https://github.com/nnyj/user-scripts
-// @version     1.0.0
-// @description Dense dark topic pages on forum.lowyat.net: one-line post headers, quotes collapsed to chips, reply links.
+// @version     1.1.0
+// @description Dense dark topic and search pages on forum.lowyat.net: one-line post headers, quotes collapsed to chips, reply links.
 // @match       https://forum.lowyat.net/*
 // @grant       none
 // @run-at      document-start
@@ -32,6 +32,8 @@
     html.lyc .post_table > tbody > tr:first-child > td.lyc-head-cell { background: var(--lyc-head) !important;
       border-bottom: 1px solid var(--lyc-head-border) !important; }
     html.lyc .post_table .post_td_left, html.lyc .post_table .catend,
+    html.lyc .lyc-result-wrap > .maintitle, html.lyc .lyc-result-wrap + br,
+    html.lyc .lyc-result tr > td:first-child, html.lyc .lyc-result tr:last-child,
     html.lyc .post_table tr:first-child > .lyc-head-cell > :not(.lyc-head),
     html.lyc .post_table .formbuttonrow > div[style*="float"],
     html.lyc .post_table img[name^="mad_"],
@@ -46,6 +48,12 @@
     html.lyc .lyc-head .lyc-likes { color: #c6c6c6; font-weight: 600; }
     html.lyc .lyc-head :is(.lyc-likes, .lyc-replies):empty { display: none; }
     html.lyc .lyc-head .lyc-num { margin-left: auto; }
+    html.lyc .lyc-head a.lyc-topic { color: var(--lyc-link) !important; font-weight: 600; }
+
+    html.lyc .lyc-result-wrap { margin: 0; border: 0; background: none; }
+    /* The site caps each search result at 200px with a scroll box. */
+    html.lyc .lyc-result .post_text { height: auto !important; overflow: visible !important; }
+    html.lyc .post_text .searchlite { background: #4a3b00 !important; color: #ffd866 !important; }
 
     html.lyc .post_text { font: 14px/19px system-ui, sans-serif; color: var(--lyc-text); }
     html.lyc .post_text a { color: var(--lyc-link) !important; }
@@ -217,6 +225,12 @@
     return pid;
   }
 
+  // Rank, post count and join date sit in text nodes between <br> tags.
+  function profile_title(details) {
+    const lines = details ? [...details.childNodes].filter((node) => node.nodeType === Node.TEXT_NODE) : [];
+    return lines.map((node) => node.textContent.trim()).filter(Boolean).join(' · ');
+  }
+
   function build_head(post) {
     const [head_row, body_row] = post.rows;
     const left = head_row.cells[0];
@@ -228,10 +242,7 @@
     const date_text = details.replace(/\s+/g, ' ').replace(/ Post #\d+\s*$/, '').trim();
     const date = parse_date(date_text);
     const author = left.querySelector('.normalname');
-    // Rank, post count and join date sit in text nodes between <br> tags.
-    const extra = body_row.cells[0].querySelector('.avatar_extra');
-    const profile_lines = extra ? [...extra.childNodes].filter((node) => node.nodeType === Node.TEXT_NODE) : [];
-    author.title = profile_lines.map((node) => node.textContent.trim()).filter(Boolean).join(' · ');
+    author.title = profile_title(body_row.cells[0].querySelector('.avatar_extra'));
     const head = el('div', { className: 'lyc-head' },
       ...left.querySelectorAll('a[name^="entry"]'),
       author,
@@ -240,6 +251,39 @@
       el('span', { className: 'lyc-replies' }),
       el('span', { className: 'lyc-num' }, right.querySelector('a[onclick^="link_to_post"]') ?? ''));
     right.append(head);
+  }
+
+  // Each search result is a `.borderwrap` with the topic title and rows for author and date, avatar and post, forum and post link.
+  function process_results() {
+    const results = [...document.querySelectorAll('.borderwrap')].filter((result) => result.querySelector('.linkthru'));
+    results.forEach((result, index) => {
+      const table = result.querySelector('table');
+      const [head_row, body_row, foot_row] = table.rows;
+      result.classList.add('lyc-result-wrap');
+      table.classList.add('post_table', 'lyc-result');
+      table.classList.toggle('lyc-odd', index % 2 === 1);
+      const head_cell = head_row.cells[1];
+      head_cell.classList.add('lyc-head-cell');
+      const date_text = head_cell.textContent.replace(/\s+/g, ' ').replace('Posted on:', '').trim();
+      const date = parse_date(date_text);
+      const author = head_row.cells[0].querySelector('.normalname');
+      author.title = profile_title(body_row.cells[0].querySelector('.postdetails'));
+      const topic = result.querySelector('.maintitle a');
+      topic.classList.add('lyc-topic');
+      const post_number = foot_row.querySelector('.linkthru');
+      post_number.target = '_blank';
+      head_cell.append(el('div', { className: 'lyc-head' },
+        author,
+        el('span', { textContent: date ? time_ago(date) : date_text, title: date_text }),
+        topic,
+        foot_row.querySelector('a[href*="showforum="]') ?? '',
+        el('span', { className: 'lyc-num' }, post_number)));
+      const body = body_row.cells[1].querySelector('.postcolor');
+      body.classList.add('post_text');
+      trim_trailing_breaks(body);
+      for (const top of body.querySelectorAll('.quotetop')) collapse_quote(top);
+    });
+    return results.length;
   }
 
   const POST = 'table[id^="post_"]';
@@ -418,6 +462,7 @@
     document.head.append(style);
     const posts = all_posts();
     add_locked_toggle();
+    if (process_results()) link_posts();
     if (!posts.length) return;
     process_posts(posts);
     restripe();
