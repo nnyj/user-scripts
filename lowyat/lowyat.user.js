@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name        Lowyat
 // @namespace   https://github.com/nnyj/user-scripts
-// @version     1.1.0
+// @version     1.1.1
 // @description Dense dark topic and search pages on forum.lowyat.net: one-line post headers, quotes collapsed to chips, reply links.
+// @icon        https://forum.lowyat.net/cropped-ico-32x32.png
 // @match       https://forum.lowyat.net/*
 // @grant       none
 // @run-at      document-start

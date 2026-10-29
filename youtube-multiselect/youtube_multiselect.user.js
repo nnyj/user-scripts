@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name        YouTube Multiselect
 // @namespace   https://github.com/nnyj/youtube-multiselect
-// @version     1.0.0
+// @version     1.0.1
 // @description Select several playlist videos, then copy, move or remove them in one go.
+// @icon        https://www.youtube.com/favicon.ico
 // @match       https://www.youtube.com/*
 // @grant       none
 // @run-at      document-idle
